@@ -34,7 +34,7 @@ public class EvilWordSearchScript : MonoBehaviour
     private float _elapsedTime;
     private Coroutine _holdTimer;
     private bool _doSubmit;
-    private bool _canInteract = true;
+    private bool _canInteract;
     private List<int> _selectionOrder = new List<int>();
     private List<int> _inputOrder = new List<int>();
 
@@ -47,6 +47,13 @@ public class EvilWordSearchScript : MonoBehaviour
             ScreenSels[btn].OnInteractEnded += ScreenRelease(btn);
         }
         GenerateAnswer();
+        Module.OnActivate += Activate;
+        
+    }
+
+    private void Activate()
+    {
+        _canInteract = true;
         StartCoroutine(CycleScreen());
     }
 
@@ -180,7 +187,7 @@ public class EvilWordSearchScript : MonoBehaviour
                 ScreenTexts[i].text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[_letterGrid[_currentScreen * 36 + i]].ToString();
                 ScreenTexts[i].color = _selectedCells[_currentScreen * 36 + i] ? new Color32(255, 255, 255, 255) : _textColors[_currentScreen];
             }
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1.3f);
         }
     }
 
