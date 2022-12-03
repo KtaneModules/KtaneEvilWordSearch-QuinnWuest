@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
 using KModkit;
+using System.Text.RegularExpressions;
 
 public class EvilWordSearchScript : MonoBehaviour
 {
@@ -48,7 +49,7 @@ public class EvilWordSearchScript : MonoBehaviour
         }
         GenerateAnswer();
         Module.OnActivate += Activate;
-        
+
     }
 
     private void Activate()
@@ -72,6 +73,7 @@ public class EvilWordSearchScript : MonoBehaviour
                 _prevClickedScreen = _currentScreen;
                 Debug.LogFormat("[Evil Word Search #{0}] Pressed starting cell: {1} ({2}) on screen {3}.", _moduleId, GetCoord(btn), "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[_letterGrid[_currentScreen * 36 + btn]], "AB"[_currentScreen]);
                 Debug.LogFormat("[Evil Word Search #{0}] Input is now {1}", _moduleId, _currentInput);
+                _inputOrder.Add(_currentScreen * 36 + btn);
                 Audio.PlaySoundAtTransform("On1", transform);
                 return false;
             }
@@ -100,8 +102,7 @@ public class EvilWordSearchScript : MonoBehaviour
             _currentInput += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[_letterGrid[_currentScreen * 36 + btn]];
             _prevClickedCell = btn;
             _prevClickedScreen = _currentScreen;
-            _inputOrder.Add(_currentScreen * 36 + btn);
-            Debug.LogFormat("[Evil Word Search #{0}] Input is now {1}", _moduleId, _currentInput);
+            Debug.LogFormat("[Evil Word Search #{0}] Input is now {1}.", _moduleId, _currentInput);
             return false;
         };
     }
@@ -320,16 +321,30 @@ public class EvilWordSearchScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private string TwitchHelpMessage = "!{0} submit A1A B2B C3A [Submit the following: A1 on Grid A, B2 on Grid B, C3 on Grid A...] | 'submit' is optional.";
+    private string TwitchHelpMessage = "!{0} press A1A B2B C3A [Submit the following: A1 on Grid A, B2 on Grid B, C3 on Grid A...] | !{0} reset [Reset your input.] | 'press' is optional.";
 #pragma warning restore 414
 
     private static readonly string[] _tpCoords = new string[] { "A1A", "B1A", "C1A", "D1A", "E1A", "F1A", "A2A", "B2A", "C2A", "D2A", "E2A", "F2A", "A3A", "B3A", "C3A", "D3A", "E3A", "F3A", "A4A", "B4A", "C4A", "D4A", "E4A", "F4A", "A5A", "B5A", "C5A", "D5A", "E5A", "F5A", "A6A", "B6A", "C6A", "D6A", "E6A", "F6A", "A1B", "B1B", "C1B", "D1B", "E1B", "F1B", "A2B", "B2B", "C2B", "D2B", "E2B", "F2B", "A3B", "B3B", "C3B", "D3B", "E3B", "F3B", "A4B", "B4B", "C4B", "D4B", "E4B", "F4B", "A5B", "B5B", "C5B", "D5B", "E5B", "F5B", "A6B", "B6B", "C6B", "D6B", "E6B", "F6B" };
 
     IEnumerator ProcessTwitchCommand(string command)
     {
+        var m = Regex.Match(command, @"^\s*reset\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (m.Success)
+        {
+            yield return null;
+            if (_inputOrder.Count == 0)
+                yield break;
+            while (_inputOrder[0] / 36 != _currentScreen)
+                yield return null;
+            ScreenSels[_inputOrder[0] % 36].OnInteract();
+            while (_elapsedTime <= 1f)
+                yield return null;
+            ScreenSels[_inputOrder[0] % 36].OnInteractEnded();
+            yield return new WaitForSeconds(0.1f);
+        }
         var parameters = command.ToUpperInvariant().Split(' ');
         var list = new List<int>();
-        for (int i = parameters[0] == "SUBMIT" ? 1 : 0; i < parameters.Length; i++)
+        for (int i = parameters[0] == "PRESS" ? 1 : 0; i < parameters.Length; i++)
         {
             int ix = Array.IndexOf(_tpCoords, parameters[i]);
             if (ix == -1)
@@ -342,16 +357,6 @@ public class EvilWordSearchScript : MonoBehaviour
         yield return null;
         yield return "strike";
         yield return "solve";
-        if (_inputOrder.Count != 0)
-        {
-            while (_inputOrder[0] / 36 != _currentScreen)
-                yield return null;
-            ScreenSels[_inputOrder[0] % 36].OnInteract();
-            while (_elapsedTime <= 1f)
-                yield return null;
-            ScreenSels[_inputOrder[0] % 36].OnInteractEnded();
-            yield return new WaitForSeconds(0.1f);
-        }
         for (int i = 0; i < list.Count; i++)
         {
             while (list[i] / 36 != _currentScreen)
@@ -361,12 +366,6 @@ public class EvilWordSearchScript : MonoBehaviour
             ScreenSels[list[i] % 36].OnInteractEnded();
             yield return new WaitForSeconds(0.1f);
         }
-        while (list[0] / 36 != _currentScreen)
-            yield return null;
-        ScreenSels[list[0] % 36].OnInteract();
-        yield return new WaitForSeconds(0.1f);
-        ScreenSels[list[0] % 36].OnInteractEnded();
-        yield break;
     }
 
     IEnumerator TwitchHandleForcedSolve()

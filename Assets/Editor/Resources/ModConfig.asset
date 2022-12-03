@@ -14,10 +14,9 @@ MonoBehaviour:
   id: EvilWordSearchModule
   title: Evil Word Search
   author: Quinn Wuest
-  description: 'ESEMFOXALAALINLKUVSEEETEHXNRORICTOSS
-
-
-    Made by Quinn Wuest'
+  description: "ESEMFOXALAALINLKUVSEEETEHXNRORICTOSS\n\nMade by Quinn Wuest\n\n[url=https://ktane.timwi.de/HTML/Evil%20Word%20Search.html]Manual
+    HTML[/url]\r\n[url=https://ktane.timwi.de/PDF/Evil%20Word%20Search.pdf]Manual
+    PDF[/url]"
   version: 1.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 247e7322d69e67643b6819f231ab1c0d, type: 3}
